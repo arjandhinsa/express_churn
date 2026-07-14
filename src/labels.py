@@ -32,4 +32,4 @@ def build_labels(completed, interval, data_end, grace_days=90) -> pd.DataFrame:
     obs["returned"] = obs.index.map(returned).fillna(False)
     obs["churned"]  = (~obs["returned"]).astype(int)
 
-    return obs[["index_visit", "churned"]]
+    return obs[["index_visit", "churned", "ReaMonths"]]
