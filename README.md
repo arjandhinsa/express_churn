@@ -1,6 +1,8 @@
-# Patient Recall Churn Prediction
+# Recall Engine 
 
 **Predicting which patients will fail to return for their recommended eye examination, using real practice data, then translating that prediction into recovered revenue.**
+
+Currently being extended from a churn model into a deployed recall prioritisation engine: expected-revenue-ranked outreach (churn × dispense value), served as a monitored API.
 
 An end-to-end machine learning project built on ~38,000 patients' worth of real appointment, dispensing, and prescription data from an independent optometry practice. The headline result is a temporally-validated churn model (AUC 0.63) that identifies **1.38× more at-risk patients than random outreach**, worth an estimated **£660 in recovered revenue per recall cycle** on held-out data and then quantified against the practice's own margins.
 
@@ -103,7 +105,9 @@ Python · pandas · scikit-learn · XGBoost · Jupyter · conda (native arm64)
 ## Repository structure
 
 ```
-express_churn/
+recall-engine/
+├── docs/    
+│   └──design.md             # priority score design(churn x value)
 ├── notebooks/
 │   ├── 01_profiling.ipynb     # data → label → features → temporal split
 │   └── 02_modelling.ipynb     # model → evaluation → business value
@@ -123,7 +127,9 @@ express_churn/
 
 ## Reproducibility & next steps
 
-The notebooks run top-to-bottom from a clean kernel, with all paths anchored to the project root and a fixed random seed. The label, feature, and modelling logic has since been refactored out of the notebooks into importable `src/` modules (data-loading, labelling, feature-engineering, and modelling as separate stages), runnable end-to-end from raw data to a trained model with a single command: `python -m src.pipeline`. Because the underlying data is real patient data, this repository documents the work rather than shipping the data itself. However, the planned next extension is a **synthetic data generator** producing VisionPlus-shaped records, enabling the full pipeline to be run end-to-end by anyone.
+The notebooks run top-to-bottom from a clean kernel, with all paths anchored to the project root and a fixed random seed. The label, feature, and modelling logic has since been refactored out of the notebooks into importable `src/` modules (data-loading, labelling, feature-engineering, and modelling as separate stages), runnable end-to-end from raw data to a trained model with a single command: `python -m src.pipeline`. Because the underlying data is real patient data, this repository documents the work rather than shipping the data itself. 
+
+Development is now focused on productionising this work: a priority layer ranking patients by expected recovered revenue (churn probability × dispense value — see docs/design.md), deployment as a Dockerized FastAPI service on AWS with CI/CD and drift monitoring, and a synthetic data generator producing VisionPlus-shaped records so the full pipeline can be run end-to-end by anyone.
 
 ---
 
