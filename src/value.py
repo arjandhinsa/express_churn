@@ -57,3 +57,4 @@ def assign_tiers(values, cutoffs):
     labels = ["Bronze", "Silver", "Gold", "Platinum"]
     return pd.cut(values, bins=[-float("inf")] + list(cutoffs) + [float("inf")],
                   labels=labels, right=False)
+
