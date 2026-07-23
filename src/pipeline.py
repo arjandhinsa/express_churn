@@ -13,8 +13,8 @@ def run_pipeline(working_dir=WORKING_DIR):
     completed, interval, data_end = build_model_inputs(pat, app, rx, orders)
     labels = build_labels(completed, interval, data_end)
     features = build_features(labels, completed, orders, pat)
-    model, metrics = build_model(features)
-    return model, metrics
+    model, metrics, test_scores = build_model(features)
+    return model, metrics, test_scores
 
 if __name__ == "__main__":
     model, metrics = run_pipeline()

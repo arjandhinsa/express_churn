@@ -29,8 +29,14 @@ def build_model(features) -> tuple:
     )
     model.fit(X_train, y_train)
 
+    test_scores = pd.DataFrame({
+    "churn_prob": model.predict_proba(X_test)[:, 1],
+    "churned": y_test,
+    "index_visit": test["index_visit"],
+    }, index=test.index)
+
     metrics = {
         "train_auc": roc_auc_score(y_train, model.predict_proba(X_train)[:, 1]),
         "test_auc":  roc_auc_score(y_test,  model.predict_proba(X_test)[:, 1]),
     }
-    return model, metrics
+    return model, metrics, test_scores
