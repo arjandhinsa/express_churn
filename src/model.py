@@ -3,8 +3,22 @@ from pathlib import Path
 from xgboost import XGBClassifier
 from sklearn.metrics import roc_auc_score 
 
+
 FEATURE_COLS = ["visit_count", "tenure_days", "avg_gap_days",
                 "total_spend", "order_count", "age", "sex", "ReaMonths"]
+
+def prepare_features(df: pd.DataFrame) -> pd.DataFrame:
+    """Encode and order features exactly as the model expects.
+
+    The single home for training/serving-consistent preparation:
+    every caller (training, API, batch scoring) goes through this,
+    so encoding can never drift between them.
+    """
+    X = df.copy()
+    X["sex"] = (X["sex"] == "M").astype(int)
+    return X[FEATURE_COLS]
+
+
 
 
 def build_model(features) -> tuple:
@@ -12,15 +26,13 @@ def build_model(features) -> tuple:
 
 
     model_df = features[FEATURE_COLS + ["churned", "index_visit"]].copy()
-    model_df["sex"] = (model_df["sex"] == "M").astype(int)
-
     model_df = model_df.sort_values("index_visit")
     cutoff = model_df["index_visit"].quantile(0.8)
     train = model_df[model_df["index_visit"] < cutoff]
     test  = model_df[model_df["index_visit"] >= cutoff]
 
-    X_train, y_train = train[FEATURE_COLS], train["churned"]
-    X_test,  y_test  = test[FEATURE_COLS],  test["churned"]
+    X_train, y_train = prepare_features(train), train["churned"]
+    X_test,  y_test  = prepare_features(test),  test["churned"]
 
     model = XGBClassifier(
             n_estimators=150, max_depth=3, learning_rate=0.03,

@@ -6,7 +6,8 @@ from fastapi import HTTPException
 from pydantic import BaseModel
 from xgboost import XGBClassifier
 
-from src.model import FEATURE_COLS
+from src.model import FEATURE_COLS, prepare_features
+
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -36,7 +37,7 @@ def health():
 @app.post("/score")
 def score(features: PatientFeatures):
     row = pd.DataFrame([features.model_dump()])
-    row["sex"] = (row["sex"] == "M").astype(int)        # same encoding as training
+    row = prepare_features(row)
     row = row[FEATURE_COLS]                              # exact training column order
     churn_prob = float(model.predict_proba(row)[:, 1][0])
     value = (features.total_spend + 157.0) / (features.visit_count + 1)
