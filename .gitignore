@@ -1,7 +1,7 @@
 # Real patient data — never commit
 data_raw/
 data_working/
-outputs/real/
+outputs/
 models/
 
 # macOS
