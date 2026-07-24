@@ -3,14 +3,15 @@ from pathlib import Path
 from xgboost import XGBClassifier
 from sklearn.metrics import roc_auc_score 
 
+FEATURE_COLS = ["visit_count", "tenure_days", "avg_gap_days",
+                "total_spend", "order_count", "age", "sex", "ReaMonths"]
+
 
 def build_model(features) -> tuple:
     """Temporal split on index_visit, train XGBoost, return (model, metrics)."""
-    feature_cols = ["visit_count", "tenure_days", "avg_gap_days",
-                    "total_spend", "order_count", "age", "sex", "ReaMonths"]
 
 
-    model_df = features[feature_cols + ["churned", "index_visit"]].copy()
+    model_df = features[FEATURE_COLS + ["churned", "index_visit"]].copy()
     model_df["sex"] = (model_df["sex"] == "M").astype(int)
 
     model_df = model_df.sort_values("index_visit")
@@ -18,8 +19,8 @@ def build_model(features) -> tuple:
     train = model_df[model_df["index_visit"] < cutoff]
     test  = model_df[model_df["index_visit"] >= cutoff]
 
-    X_train, y_train = train[feature_cols], train["churned"]
-    X_test,  y_test  = test[feature_cols],  test["churned"]
+    X_train, y_train = train[FEATURE_COLS], train["churned"]
+    X_test,  y_test  = test[FEATURE_COLS],  test["churned"]
 
     model = XGBClassifier(
             n_estimators=150, max_depth=3, learning_rate=0.03,
