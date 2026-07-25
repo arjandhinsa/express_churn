@@ -1,3 +1,5 @@
+import os
+
 from pathlib import Path
 
 import pandas as pd
@@ -8,8 +10,9 @@ from src.features import build_features
 from src.model import prepare_features
 from src.priority import build_priority
 
+
 ROOT = Path(__file__).resolve().parent.parent
-WORKING_DIR = ROOT / "data_working"
+WORKING_DIR = Path(os.getenv("DATA_DIR", ROOT / "data_working"))
 MODELS_DIR = ROOT / "models"
 OUTPUTS_DIR = ROOT / "outputs"
 
