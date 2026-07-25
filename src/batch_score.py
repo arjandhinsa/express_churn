@@ -12,9 +12,14 @@ from src.priority import build_priority
 
 
 ROOT = Path(__file__).resolve().parent.parent
+
+
+SYNTHETIC = bool(os.getenv("DATA_DIR"))
+FLAVOUR = "synthetic" if SYNTHETIC else "real"
+
 WORKING_DIR = Path(os.getenv("DATA_DIR", ROOT / "data_working"))
-MODELS_DIR = ROOT / "models"
-OUTPUTS_DIR = ROOT / "outputs"
+MODELS_DIR = ROOT / "models" / FLAVOUR
+OUTPUTS_DIR = ROOT / "outputs" / FLAVOUR
 
 
 
@@ -60,7 +65,7 @@ def main():
 
     # 5. write: timestamped history + the file the API serves
     stamp = pd.Timestamp.today().strftime("%Y-%m-%d")
-    OUTPUTS_DIR.mkdir(exist_ok=True)
+    OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
     ranked.to_csv(OUTPUTS_DIR / f"recall_list_{stamp}.csv")
     ranked.to_csv(OUTPUTS_DIR / "recall_list.csv")
 

@@ -8,7 +8,15 @@ from src.features import build_features
 from src.model import build_model
 
 # --- config: the one place these live ---
-WORKING_DIR = Path(os.getenv("DATA_DIR", Path(__file__).parent.parent / "data_working"))
+ROOT = Path(__file__).resolve().parent.parent
+
+
+SYNTHETIC = bool(os.getenv("DATA_DIR"))
+FLAVOUR = "synthetic" if SYNTHETIC else "real"
+
+WORKING_DIR = Path(os.getenv("DATA_DIR", ROOT / "data_working"))
+MODELS_DIR = ROOT / "models" / FLAVOUR
+
 
 def run_pipeline(working_dir=WORKING_DIR):
     """Load → derive → label → features → train. Returns (model, metrics)."""
@@ -17,9 +25,9 @@ def run_pipeline(working_dir=WORKING_DIR):
     labels = build_labels(completed, interval, data_end)
     features = build_features(labels, completed, orders, pat)
     model, metrics, test_scores = build_model(features)
-    models_dir = Path(__file__).parent.parent / "models"
-    models_dir.mkdir(exist_ok=True)
-    model.save_model(models_dir / "churn_model.json")
+    
+    MODELS_DIR.mkdir(parents=True, exist_ok=True)
+    model.save_model(MODELS_DIR / "churn_model.json")
     return model, metrics, test_scores
 
 
