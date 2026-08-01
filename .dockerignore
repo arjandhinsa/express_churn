@@ -1,0 +1,13 @@
+data_raw/
+data_working/
+models/real/
+outputs/real/
+.env
+.git/
+notebooks/
+__pycache__/
+*.pyc
+**/*.pyc
+.vscode/
+.pytest_cache/
+**/__pycache__/

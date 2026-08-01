@@ -10,6 +10,31 @@ An end-to-end machine learning project built on ~38,000 patients' worth of real 
 
 ---
 
+## Run the demo
+
+The full service runs on synthetic data, so no real patient data is required
+or included:
+
+```bash
+docker compose up
+```
+
+Then open http://localhost:8000/docs for the interactive API:
+
+- `POST /score` — churn probability, expected value and priority for one patient
+- `GET /recall-list?top_n=20` — the ranked recall list
+- `GET /health`
+
+To regenerate the synthetic practice and retrain from scratch:
+
+```bash
+python -m src.make_synthetic
+DATA_DIR=data_working/synthetic python -m src.pipeline
+DATA_DIR=data_working/synthetic python -m src.batch_score
+```
+
+
+
 ## Problem
 
 Independent optometry practices lose measurable revenue when patients drift away between recall cycles. A lapsed patient means a missed sight test *and* the associated dispense (glasses or contact lenses). Recalls are the practice's core retention mechanism, but outreach is limited: staff can only call so many patients. The question this project answers:
