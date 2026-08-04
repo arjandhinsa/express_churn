@@ -10,6 +10,17 @@ An end-to-end machine learning project built on ~38,000 patients' worth of real 
 
 ---
 
+## Live demo
+
+**https://recall.seyn.co.uk/docs** — the API running on AWS, on synthetic data.
+
+- `GET /recall-list?top_n=20` — the ranked recall list
+- `POST /score` — churn probability, expected value and priority for one patient
+- `GET /health`
+
+Runs locally too: `docker compose up`
+
+
 ## Run the demo
 
 The full service runs on synthetic data, so no real patient data is required
