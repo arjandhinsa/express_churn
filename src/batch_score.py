@@ -9,6 +9,7 @@ from src.dataset import load_tables, build_model_inputs
 from src.features import build_features
 from src.model import prepare_features
 from src.priority import build_priority
+from src.value import PRIOR, K
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -60,7 +61,7 @@ def main():
     churn_probs = pd.Series(model.predict_proba(X)[:, 1], index=features.index)
 
     # 4. value + priority
-    values = (features["total_spend"] + 157.0) / (features["visit_count"] + 1)
+    values = (features["total_spend"] + K * PRIOR) / (features["visit_count"] + K)
     ranked = build_priority(churn_probs, values)
 
     # 5. write: timestamped history + the file the API serves

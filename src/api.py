@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
 
+from datetime import datetime, timezone
+
 import pandas as pd
 from fastapi import FastAPI
 from fastapi import HTTPException
@@ -8,6 +10,7 @@ from pydantic import BaseModel
 from xgboost import XGBClassifier
 
 from src.model import prepare_features
+from src.value import K, PRIOR
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -47,7 +50,7 @@ def score(features: PatientFeatures):
     row = pd.DataFrame([features.model_dump()])
     row = prepare_features(row)                            # exact training column order
     churn_prob = float(model.predict_proba(row)[:, 1][0])
-    value = (features.total_spend + 157.0) / (features.visit_count + 1)
+    value = (features.total_spend + K * PRIOR) / (features.visit_count + K)
     return {"churn_prob": churn_prob, "value": value, "priority": churn_prob * value}
 
 
@@ -56,4 +59,10 @@ def recall_list(top_n: int = 20):
     path = OUTPUTS_DIR / "recall_list.csv"
     if not path.exists():
         raise HTTPException(status_code=404, detail="No recall list generated yet")
-    return pd.read_csv(path).head(top_n).to_dict("records")
+    generated_at = datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc).isoformat()
+    return {
+        "generated_at": generated_at,
+        "flavour": FLAVOUR,
+        "count": top_n,
+        "patients": pd.read_csv(path).head(top_n).to_dict("records"),
+    }

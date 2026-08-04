@@ -2,8 +2,10 @@
 
 import pandas as pd
 
+PRIOR = 157.0
+K = 1
 
-def avg_spend_per_visit(orders, visits, index_dates, k=1, prior=157.0):
+def avg_spend_per_visit(orders, visits, index_dates, k=K, prior=PRIOR):
     """
     Calculate the average spend per visit for each patient.
 
