@@ -1,5 +1,7 @@
 # Recall Engine 
 
+![CI](https://github.com/arjandhinsa/recall-engine/actions/workflows/ci.yml/badge.svg)
+
 **Predicting which patients will fail to return for their recommended eye examination, using real practice data, then translating that prediction into recovered revenue.**
 
 Currently being extended from a churn model into a deployed recall prioritisation engine: expected-revenue-ranked outreach (churn × dispense value), served as a monitored API.
