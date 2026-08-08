@@ -1,4 +1,4 @@
-name: CI
+name: CI/CD
 
 on:
   push:
@@ -10,15 +10,61 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest
+      - name: Run tests
+        run: python -m pytest tests/ -v
+
+  deploy:
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write      # required for OIDC
+      contents: read
+    env:
+      REGISTRY: 066283877987.dkr.ecr.eu-west-2.amazonaws.com
+      INSTANCE_ID: i-04829e732f9f5fdf5
+    steps:
+      - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Install dependencies
+      - name: Build synthetic demo artifacts
         run: |
           pip install -r requirements.txt
-          pip install pytest
+          python -m src.make_synthetic
+          DATA_DIR=data_working/synthetic python -m src.pipeline
+          DATA_DIR=data_working/synthetic python -m src.batch_score
 
-      - name: Run tests
-        run: python -m pytest tests/ -v
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::066283877987:role/github-actions-recall-engine
+          aws-region: eu-west-2
+
+      - uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push image
+        run: |
+          docker build -t $REGISTRY/recall-engine:latest .
+          docker push $REGISTRY/recall-engine:latest
+
+      - name: Redeploy on EC2
+        run: |
+          aws ssm send-command \
+            --instance-ids $INSTANCE_ID \
+            --document-name "AWS-RunShellScript" \
+            --comment "Deploy ${{ github.sha }}" \
+            --parameters commands='[
+              "aws ecr get-login-password --region eu-west-2 | docker login --username AWS --password-stdin 066283877987.dkr.ecr.eu-west-2.amazonaws.com",
+              "docker pull 066283877987.dkr.ecr.eu-west-2.amazonaws.com/recall-engine:latest",
+              "docker rm -f recall-engine || true",
+              "docker run -d --restart always -p 8000:8000 --name recall-engine 066283877987.dkr.ecr.eu-west-2.amazonaws.com/recall-engine:latest"
+            ]'
