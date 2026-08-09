@@ -52,4 +52,4 @@ def build_model(features) -> tuple:
         "train_auc": roc_auc_score(y_train, model.predict_proba(X_train)[:, 1]),
         "test_auc":  roc_auc_score(y_test,  model.predict_proba(X_test)[:, 1]),
     }
-    return model, metrics, test_scores
+    return model, metrics, test_scores, X_train

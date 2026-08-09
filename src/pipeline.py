@@ -24,10 +24,12 @@ def run_pipeline(working_dir=WORKING_DIR):
     completed, interval, data_end = build_model_inputs(pat, app, rx, orders)
     labels = build_labels(completed, interval, data_end)
     features = build_features(labels, completed, orders, pat)
-    model, metrics, test_scores = build_model(features)
-    
+    model, metrics, test_scores, reference = build_model(features)
+
     MODELS_DIR.mkdir(parents=True, exist_ok=True)
     model.save_model(MODELS_DIR / "churn_model.json")
+    reference.to_parquet(MODELS_DIR / "reference.parquet")
+
     return model, metrics, test_scores
 
 

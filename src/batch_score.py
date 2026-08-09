@@ -10,6 +10,7 @@ from src.features import build_features
 from src.model import prepare_features
 from src.priority import build_priority
 from src.value import PRIOR, K
+from src.monitoring import run_drift_check
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -73,7 +74,15 @@ def main():
     print(f"Scored {len(ranked)} patients")
     print(f"Top-20% expected recovery: £{ranked['priority'].head(int(len(ranked)*0.2)).sum() * 0.2:,.0f}")
 
+    # 6. monitor: has the patient mix drifted from what the model learned?
+    reference = pd.read_parquet(MODELS_DIR / "reference.parquet")
+    ref_probs = model.predict_proba(reference)[:, 1]
+    drift = run_drift_check(reference, X, OUTPUTS_DIR / "monitoring",
+                            reference_probs=ref_probs, current_probs=churn_probs.values)
+    print(f"Drift: {drift['n_drifted']}/{drift['n_columns']} columns "
+          f"({drift['drifted_share']:.0%}) — detected: {drift['drift_detected']}")
+    print(f"Prediction drift: {drift['prediction_drift']}")
 
-
+    
 if __name__ == "__main__":
     main()

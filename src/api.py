@@ -1,3 +1,4 @@
+import json
 import os
 from pathlib import Path
 
@@ -6,6 +7,7 @@ from datetime import datetime, timezone
 import pandas as pd
 from fastapi import FastAPI
 from fastapi import HTTPException
+from fastapi.responses import FileResponse, RedirectResponse
 from pydantic import BaseModel
 from xgboost import XGBClassifier
 
@@ -40,6 +42,11 @@ class PatientFeatures(BaseModel):
     sex: str
 
 
+@app.get("/", include_in_schema=False)
+def root():
+    return RedirectResponse("/docs")
+
+
 @app.get("/health")
 def health():
     return {"status": "ok"}
@@ -66,3 +73,21 @@ def recall_list(top_n: int = 20):
         "count": top_n,
         "patients": pd.read_csv(path).head(top_n).to_dict("records"),
     }
+
+
+@app.get("/monitoring")
+def monitoring():
+    """Latest data and prediction drift status."""
+    path = OUTPUTS_DIR / "monitoring" / "drift_status.json"
+    if not path.exists():
+        raise HTTPException(status_code=404, detail="No drift check has run yet")
+    return json.loads(path.read_text())
+
+
+@app.get("/monitoring/report", include_in_schema=False)
+def monitoring_report():
+    """Full Evidently drift report (HTML)."""
+    path = OUTPUTS_DIR / "monitoring" / "drift_latest.html"
+    if not path.exists():
+        raise HTTPException(status_code=404, detail="No drift report generated yet")
+    return FileResponse(path, media_type="text/html")

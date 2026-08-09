@@ -1,0 +1,35 @@
+name: Drift check
+
+on:
+  schedule:
+    - cron: "0 8 * * 1"      # Mondays 08:00 UTC
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch drift status
+        id: drift
+        run: |
+          curl -s https://recall.seyn.co.uk/monitoring > status.json
+          cat status.json
+          echo "detected=$(jq -r .drift_detected status.json)" >> $GITHUB_OUTPUT
+          echo "share=$(jq -r .drifted_share status.json)" >> $GITHUB_OUTPUT
+          echo "pred=$(jq -r .prediction_drift status.json)" >> $GITHUB_OUTPUT
+
+      - name: Raise an issue if drift detected
+        if: steps.drift.outputs.detected == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue create \
+            --title "Drift detected: ${{ steps.drift.outputs.share }} of columns" \
+            --body "Prediction drift: ${{ steps.drift.outputs.pred }}.
+          Review https://recall.seyn.co.uk/monitoring/report before retraining.
+          Note that some drift is structural — see the caveat in src/monitoring.py.
+          To retrain the synthetic demo, run the CI/CD workflow manually.
+          Retraining on real practice data runs locally; it never leaves the practice."
