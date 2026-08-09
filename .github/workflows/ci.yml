@@ -5,6 +5,7 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+  
 
 jobs:
   test:
@@ -64,8 +65,11 @@ jobs:
             --document-name "AWS-RunShellScript" \
             --comment "Deploy ${{ github.sha }}" \
             --parameters commands='[
-              "aws ecr get-login-password --region eu-west-2 | docker login --username AWS --password-stdin 066283877987.dkr.ecr.eu-west-2.amazonaws.com",
-              "docker pull 066283877987.dkr.ecr.eu-west-2.amazonaws.com/recall-engine:latest",
-              "docker rm -f recall-engine || true",
-              "docker run -d --restart always -p 8000:8000 --name recall-engine 066283877987.dkr.ecr.eu-west-2.amazonaws.com/recall-engine:latest"
+              "docker system prune -af && aws ecr get-login-password --region eu-west-2 | docker login --username AWS --password-stdin 066283877987.dkr.ecr.eu-west-2.amazonaws.com && docker pull 066283877987.dkr.ecr.eu-west-2.amazonaws.com/recall-engine:latest && (docker rm -f recall-engine || true) && docker run -d --restart always -p 8000:8000 --name recall-engine 066283877987.dkr.ecr.eu-west-2.amazonaws.com/recall-engine:latest"
             ]'
+
+      - name: Verify Deployment
+        run: |
+          sleep 60
+          curl -sf https://recall.seyn.co.uk/monitoring > /dev/null \
+            || (echo "Live check failed — container may be running a stale image" && exit 1)
